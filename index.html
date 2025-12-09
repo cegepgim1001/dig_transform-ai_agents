@@ -1,0 +1,879 @@
+<!-- Chosen Palette: Cognitive Sand (Warm Neutrals with Amber/Sky Accents) -->
+<!-- Application Structure Plan: 
+    Layout: Top Navigation Bar (Fixed) + Main Content Area.
+    Interaction Model: Tab-based SPA. Clicking a menu item hides the current view and fades in the new one.
+    
+    Views:
+    1. Foundations (Part 1): Intro, Definitions, "Transformation vs. Digitization" Card Flip Exercise.
+    2. Drivers & Data (Part 1): Key Drivers, "Identify the Driver" Scenario Quiz, Data Strategy.
+    3. AI Landscape (Part 1): AI Types, Radar Chart, "Match the AI" Exercise.
+    4. Harari's Pivot (Part 2): Tool vs Agent Concept, "Hacking Humans" Calculator, Tool/Agent Sorter Exercise.
+    5. Agentic Future (Part 2): Agentic Loop Animation, "Build the Loop" Exercise, Klarna Case Study.
+    6. Future Proofing (Part 2): Governance, Alignment Trap Scenario, IQ/EQ Career Sorter.
+
+    Why: This segregates complex topics into focused "pages," allowing for deeper interactivity without clutter.
+-->
+<!-- Visualization & Content Choices: 
+    1. "Misconception Buster" (CSS Card Flip): Goal: Test. Distinguishes between simple digitization and true transformation.
+    2. "Driver ID" (Interactive Buttons): Goal: Assess. Users map real-world examples to the 3 key drivers.
+    3. "Tool vs Agent" (Swipe/Click Logic): Goal: Classify. Rapid fire classification of scenarios.
+    4. "Hacking Humans" (Sliders): Goal: Simulate. (Retained from previous version).
+    5. "Agentic Loop" (Stepper): Goal: Process. (Retained).
+    6. "Alignment Trap" (Decision Buttons): Goal: Critical Thinking. Users choose a sub-goal and see consequences.
+    7. "Career Sorter" (Click-to-move): Goal: Organize. Categorize tasks by IQ (Agent) vs EQ (Human).
+    CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Transformation & Agentic AI: Interactive MBA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #fafaf9; color: #1c1917; }
+        
+        /* Navigation Active State */
+        .nav-item.active { border-bottom: 3px solid #d97706; color: #fff; background-color: rgba(255,255,255,0.1); }
+        
+        /* View Transitions */
+        .view-section { display: none; opacity: 0; transition: opacity 0.4s ease-in-out; }
+        .view-section.active { display: block; opacity: 1; }
+
+        /* Chart Containers */
+        .chart-container { position: relative; width: 100%; max-width: 600px; height: 300px; margin: 0 auto; }
+        @media (min-width: 768px) { .chart-container { height: 350px; } }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1c1917; }
+        ::-webkit-scrollbar-thumb { background: #44403c; border-radius: 4px; }
+
+        /* Interactive Card Flip */
+        .flip-card { perspective: 1000px; cursor: pointer; height: 200px; }
+        .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s; transform-style: preserve-3d; }
+        .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card-front, .flip-card-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; padding: 1.5rem; flex-direction: column; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .flip-card-front { background-color: white; border: 1px solid #e7e5e4; }
+        .flip-card-back { background-color: #1c1917; color: white; transform: rotateY(180deg); }
+
+        /* Interactive Option Button */
+        .option-btn { transition: all 0.2s; border: 2px solid transparent; }
+        .option-btn:hover { transform: translateY(-2px); shadow: md; }
+        .option-btn.selected-correct { background-color: #dcfce7; border-color: #22c55e; color: #14532d; }
+        .option-btn.selected-wrong { background-color: #fee2e2; border-color: #ef4444; color: #7f1d1d; }
+
+        /* Sliders */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%; background: #d97706; cursor: pointer; margin-top: -8px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #d6d3d1; border-radius: 2px; }
+
+        /* Animations */
+        @keyframes fadeInScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .animate-pop { animation: fadeInScale 0.3s ease-out forwards; }
+
+        /* --- ADDED CSS FROM INDEX.HTML (ADAPTED) --- */
+        :root { 
+            --bg-2: #ffffff; 
+            --text: #1c1917; 
+            --muted: #78716c; 
+            --accent: #d97706; /* Amber */
+            --ok: #22c55e; 
+            --warn: #f59e0b; 
+            --danger: #ef4444; 
+            --border: #e7e5e4; 
+            --shadow: 0 10px 30px rgba(0,0,0,.1); 
+        }
+
+        /* Disclaimer Box Styles */
+        .disclaimer-box {
+            padding: 1rem 1.25rem;
+            border-left: 4px solid var(--border);
+            border-radius: .6rem;
+            margin: 1.5rem 0;
+            box-shadow: var(--shadow);
+            background: white;
+        }
+        .disclaimer-box h3 {
+            margin-top: 0;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .disclaimer-warn {
+            background: #fffbeb; /* Amber-50 */
+            border-color: var(--warn);
+            color: #92400e;
+        }
+        .disclaimer-danger {
+            background: #fef2f2; /* Red-50 */
+            border-color: var(--danger);
+            color: #991b1b;
+        }
+        .disclaimer-info {
+            background: #f0f9ff; /* Sky-50 */
+            border-color: #0ea5e9;
+            color: #075985;
+        }
+
+        /* Footer Styles */
+        .footer { margin: 2rem 0; color: var(--muted); font-size: .9rem; text-align: center; border-top: 1px solid var(--border); padding-top: 2rem; }
+
+        /* Password Protection Styles */
+        .content-protected {
+            filter: blur(10px);
+            pointer-events: none;
+            user-select: none;
+        }
+        #password-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            display: none; /* Hidden by default, shown by JS */
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            color: var(--text);
+        }
+        #password-modal {
+            background: var(--bg-2);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            padding: 2rem;
+            width: 100%;
+            max-width: 450px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        #password-modal p {
+            margin: 0 0 0.5rem;
+            line-height: 1.6;
+            color: var(--muted);
+            white-space: pre-line;
+        }
+        #password-modal .input-group {
+            position: relative;
+            display: flex;
+            gap: 0.5rem;
+        }
+        #password-input {
+            flex-grow: 1;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            outline: none;
+        }
+        #password-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2);
+        }
+        #toggle-password {
+            position: absolute;
+            right: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 1.25rem;
+            padding: 0.25rem;
+            color: var(--muted);
+        }
+        #submit-password {
+            background: var(--accent);
+            color: white;
+            font-weight: 700;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        #submit-password:hover {
+            background: #b45309;
+        }
+        #password-error {
+            color: var(--danger);
+            font-size: 0.9rem;
+            height: 1.2em;
+            text-align: center;
+            font-weight: bold;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <!-- TOP NAVIGATION -->
+    <nav class="bg-stone-900 text-stone-400 shadow-xl z-50 flex-shrink-0">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center gap-3">
+                    <span class="text-2xl">🎓</span>
+                    <div>
+                        <h1 class="font-bold text-white text-lg leading-tight">MBA Interactive Presentations</h1>
+                        <p class="text-[10px] uppercase tracking-widest text-amber-500 font-bold">Digital Transformation and AI (Agentic) Driven Decision Making</p>
+                    </div>
+                </div>
+                
+                <!-- Menu Items -->
+                <div class="hidden md:flex space-x-1 h-full">
+                    <button onclick="switchView('view-foundations')" class="nav-item active px-4 h-full flex items-center font-medium text-sm transition-colors hover:text-white">1. Foundations</button>
+                    <button onclick="switchView('view-drivers')" class="nav-item px-4 h-full flex items-center font-medium text-sm transition-colors hover:text-white">2. Drivers & Data</button>
+                    <button onclick="switchView('view-ai')" class="nav-item px-4 h-full flex items-center font-medium text-sm transition-colors hover:text-white">3. AI Landscape</button>
+                    <button onclick="switchView('view-harari')" class="nav-item px-4 h-full flex items-center font-medium text-sm transition-colors hover:text-white border-l border-stone-800">4. Harari's Pivot</button>
+                    <button onclick="switchView('view-agentic')" class="nav-item px-4 h-full flex items-center font-medium text-sm transition-colors hover:text-white">5. Agentic AI</button>
+                    <button onclick="switchView('view-future')" class="nav-item px-4 h-full flex items-center font-medium text-sm transition-colors hover:text-white">6. Future Proofing</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT AREA -->
+    <main id="main" class="flex-1 overflow-y-auto bg-stone-50 relative p-4 md:p-8 scroll-smooth">
+        <div class="max-w-5xl mx-auto pb-24">
+
+            <!-- VIEW 1: FOUNDATIONS -->
+            <section id="view-foundations" class="view-section active animate-pop">
+                <header class="mb-10 text-center">
+                    <h2 class="text-3xl md:text-4xl font-black text-stone-900 mb-2">Foundations of Digital Transformation</h2>
+                    <p class="text-lg text-stone-600">Rethinking workflows, culture, and value—not just software.</p>
+                </header>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                    <div class="prose text-stone-600">
+                        <h3 class="font-bold text-stone-800 text-xl mb-4">Core Definition</h3>
+                        <p>Digital transformation is a foundational change in how an organization delivers value. Success depends on leadership commitment, strategic clarity, and employee buy-in.</p>
+                        <ul class="list-disc pl-5 space-y-2 mt-4">
+                            <li><strong>Efficiency:</strong> Automating workflows.</li>
+                            <li><strong>Agility:</strong> Adapting to market trends.</li>
+                            <li><strong>Culture:</strong> Aligning talent with tech.</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- EXERCISE 1: MISCONCEPTION BUSTER -->
+                    <div class="bg-amber-50 p-6 rounded-xl border border-amber-200">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="font-bold text-amber-900 flex items-center gap-2"><span class="text-xl">⚡</span> Exercise: Myth vs. Reality</h4>
+                            <span class="text-xs bg-amber-200 text-amber-800 px-2 py-1 rounded-full">Click to Flip</span>
+                        </div>
+                        <div class="grid grid-cols-1 gap-4">
+                            <!-- Card 1 -->
+                            <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                                <div class="flip-card-inner">
+                                    <div class="flip-card-front">
+                                        <h5 class="font-bold text-stone-700">"We moved our files to Dropbox."</h5>
+                                        <p class="text-xs text-stone-400 mt-2">(Click to reveal verdict)</p>
+                                    </div>
+                                    <div class="flip-card-back bg-stone-800">
+                                        <h5 class="font-bold text-amber-400">Digitization (Not Transformation)</h5>
+                                        <p class="text-xs mt-2">You just changed storage. The process didn't change.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Card 2 -->
+                            <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                                <div class="flip-card-inner">
+                                    <div class="flip-card-front">
+                                        <h5 class="font-bold text-stone-700">"We use IoT sensors to predict machine failure and auto-order parts."</h5>
+                                    </div>
+                                    <div class="flip-card-back bg-stone-800">
+                                        <h5 class="font-bold text-green-400">True Transformation</h5>
+                                        <p class="text-xs mt-2">New value created: Zero downtime + Autonomous Ops.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW 2: DRIVERS & DATA -->
+            <section id="view-drivers" class="view-section">
+                <header class="mb-10 text-center">
+                    <h2 class="text-3xl md:text-4xl font-black text-stone-900 mb-2">Key Drivers & Data Strategy</h2>
+                    <p class="text-lg text-stone-600">Why change now? And how do we fuel it?</p>
+                </header>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">
+                    <!-- Chart -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                        <h4 class="font-bold text-stone-800 mb-4 text-center">Pressure to Transform</h4>
+                        <div class="chart-container">
+                            <canvas id="driversChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- EXERCISE 2: IDENTIFY THE DRIVER -->
+                    <div class="bg-sky-50 p-6 rounded-xl border border-sky-200 flex flex-col">
+                        <h4 class="font-bold text-sky-900 mb-4 flex items-center gap-2"><span class="text-xl">🎯</span> Exercise: Identify the Driver</h4>
+                        <p class="text-sm text-sky-700 mb-4">Read the scenario and select the primary pressure driving the change.</p>
+                        
+                        <div id="driver-quiz-container" class="flex-1 flex flex-col justify-center space-y-4">
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-sky-100">
+                                <p class="font-medium text-stone-800 italic">"A competitor just launched 1-hour delivery using drones. We are losing market share rapidly."</p>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
+                                <button onclick="checkDriver(this, 'wrong')" class="option-btn bg-white py-3 rounded-lg text-sm font-bold text-stone-600">Customer</button>
+                                <button onclick="checkDriver(this, 'wrong')" class="option-btn bg-white py-3 rounded-lg text-sm font-bold text-stone-600">Technology</button>
+                                <button onclick="checkDriver(this, 'correct')" class="option-btn bg-white py-3 rounded-lg text-sm font-bold text-stone-600">Competition</button>
+                            </div>
+                            <div id="driver-feedback" class="text-center text-sm font-bold h-6"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW 3: AI LANDSCAPE -->
+            <section id="view-ai" class="view-section">
+                <header class="mb-10 text-center">
+                    <h2 class="text-3xl md:text-4xl font-black text-stone-900 mb-2">The AI Landscape</h2>
+                    <p class="text-lg text-stone-600">From NLP to Computer Vision. IQ vs EQ.</p>
+                </header>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                    <!-- Radar Chart -->
+                    <div class="bg-stone-900 rounded-xl p-6 shadow-lg text-white">
+                        <h4 class="font-bold text-center mb-2">Human vs. AI Capability</h4>
+                        <div class="chart-container">
+                            <canvas id="radarChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- EXERCISE 3: MATCH THE TECH -->
+                    <div class="bg-purple-50 p-6 rounded-xl border border-purple-200">
+                        <h4 class="font-bold text-purple-900 mb-4 flex items-center gap-2"><span class="text-xl">🧩</span> Exercise: Match Tech to Task</h4>
+                        <div class="space-y-4">
+                            <!-- Q1 -->
+                            <div>
+                                <p class="text-sm font-medium text-stone-700 mb-2">1. "I need to verify 5,000 loan documents for missing signatures overnight."</p>
+                                <div class="flex gap-2">
+                                    <button onclick="checkTech(this, 'correct')" class="option-btn px-4 py-2 bg-white rounded text-xs font-bold shadow-sm">RPA (Robotic Process Automation)</button>
+                                    <button onclick="checkTech(this, 'wrong')" class="option-btn px-4 py-2 bg-white rounded text-xs font-bold shadow-sm">NLP (Natural Language)</button>
+                                </div>
+                            </div>
+                            <!-- Q2 -->
+                            <div>
+                                <p class="text-sm font-medium text-stone-700 mb-2">2. "I want to gauge customer sentiment from 10,000 tweets."</p>
+                                <div class="flex gap-2">
+                                    <button onclick="checkTech(this, 'wrong')" class="option-btn px-4 py-2 bg-white rounded text-xs font-bold shadow-sm">Computer Vision</button>
+                                    <button onclick="checkTech(this, 'correct')" class="option-btn px-4 py-2 bg-white rounded text-xs font-bold shadow-sm">NLP (Natural Language)</button>
+                                </div>
+                            </div>
+                            <!-- Q3 -->
+                            <div>
+                                <p class="text-sm font-medium text-stone-700 mb-2">3. "I need to spot defective apples on a conveyor belt."</p>
+                                <div class="flex gap-2">
+                                    <button onclick="checkTech(this, 'correct')" class="option-btn px-4 py-2 bg-white rounded text-xs font-bold shadow-sm">Computer Vision</button>
+                                    <button onclick="checkTech(this, 'wrong')" class="option-btn px-4 py-2 bg-white rounded text-xs font-bold shadow-sm">Machine Learning</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW 4: HARARI'S PIVOT -->
+            <section id="view-harari" class="view-section">
+                <header class="mb-8 border-l-8 border-red-600 pl-6">
+                    <span class="text-xs font-bold uppercase tracking-widest text-red-600">The Philosophical Pivot</span>
+                    <h2 class="text-3xl md:text-4xl font-black text-stone-900 mb-2">From Tools to Agents</h2>
+                    <p class="text-lg text-stone-600">Yuval Noah Harari's warning: AI is not just a tool. It is an "Alien Intelligence."</p>
+                </header>
+
+                <!-- EXERCISE 4: HACKING HUMANS -->
+                <div class="bg-stone-100 rounded-2xl p-8 border border-stone-200 mb-12 shadow-inner">
+                    <h3 class="font-bold text-stone-800 text-xl mb-6 text-center">Exercise: The "Hackable Human" Equation</h3>
+                    <p class="text-center text-stone-500 mb-8 max-w-xl mx-auto">Harari's Formula: <strong>Biological Knowledge (B) x Computing Power (C) = Ability to Hack Humans (AHH)</strong>. Can you create a "Hackable" scenario?</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+                        <div class="space-y-6 md:col-span-2">
+                            <div>
+                                <div class="flex justify-between mb-2">
+                                    <label class="font-bold text-stone-700">Biological Knowledge (B)</label>
+                                    <span id="bioVal" class="text-amber-600 font-mono">50%</span>
+                                </div>
+                                <input type="range" id="bioInput" min="0" max="100" value="50">
+                                <p class="text-xs text-stone-400 mt-1">Understanding brain chemistry, DNA, emotions.</p>
+                            </div>
+                            <div>
+                                <div class="flex justify-between mb-2">
+                                    <label class="font-bold text-stone-700">Computing Power (C)</label>
+                                    <span id="compVal" class="text-sky-600 font-mono">50%</span>
+                                </div>
+                                <input type="range" id="compInput" min="0" max="100" value="50">
+                                <p class="text-xs text-stone-400 mt-1">Processing massive datasets in real-time.</p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-stone-200 text-center shadow-lg transform transition-transform hover:scale-105">
+                            <div class="text-xs font-bold text-stone-400 uppercase tracking-widest mb-2">Hackability Score</div>
+                            <div id="hackResult" class="text-5xl font-black text-stone-300">25%</div>
+                            <div id="hackMessage" class="text-xs mt-3 text-stone-500 font-bold uppercase">Safe</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EXERCISE 5: TOOL VS AGENT -->
+                <div class="bg-white p-6 rounded-xl border border-stone-200">
+                    <h4 class="font-bold text-stone-900 mb-4 flex items-center gap-2"><span class="text-xl">⚖️</span> Exercise: Tool or Agent?</h4>
+                    <p class="text-sm text-stone-600 mb-4">Read the scenario. Is the tech acting as a Tool (Wait for input) or an Agent (Acts autonomously)?</p>
+                    
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between p-3 bg-stone-50 rounded-lg">
+                            <span class="text-sm font-medium">Excel calculates a sum when you type the formula.</span>
+                            <div class="flex gap-2">
+                                <button onclick="checkTool(this, 'tool')" class="text-xs bg-white border px-2 py-1 rounded hover:bg-stone-200">Tool</button>
+                                <button onclick="checkTool(this, 'agent')" class="text-xs bg-white border px-2 py-1 rounded hover:bg-stone-200">Agent</button>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-stone-50 rounded-lg">
+                            <span class="text-sm font-medium">An algorithm buys stock because it detected a storm in Brazil.</span>
+                            <div class="flex gap-2">
+                                <button onclick="checkTool(this, 'tool')" class="text-xs bg-white border px-2 py-1 rounded hover:bg-stone-200">Tool</button>
+                                <button onclick="checkTool(this, 'agent')" class="text-xs bg-white border px-2 py-1 rounded hover:bg-stone-200">Agent</button>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-stone-50 rounded-lg">
+                            <span class="text-sm font-medium">Klarna's bot refunds a customer and updates the ledger without human approval.</span>
+                            <div class="flex gap-2">
+                                <button onclick="checkTool(this, 'tool')" class="text-xs bg-white border px-2 py-1 rounded hover:bg-stone-200">Tool</button>
+                                <button onclick="checkTool(this, 'agent')" class="text-xs bg-white border px-2 py-1 rounded hover:bg-stone-200">Agent</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW 5: AGENTIC AI -->
+            <section id="view-agentic" class="view-section">
+                <header class="mb-10 text-center">
+                    <h2 class="text-3xl md:text-4xl font-black text-stone-900 mb-2">The Rise of Agentic AI</h2>
+                    <p class="text-lg text-stone-600">The Loop: Perception → Reasoning → Action → Feedback.</p>
+                </header>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                    <!-- ANIMATION -->
+                    <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+                        <h4 class="font-bold text-stone-800 mb-4">The Agentic Loop</h4>
+                        <div class="space-y-4">
+                            <div class="loop-step p-4 rounded-lg bg-stone-50 border border-stone-100 shadow-sm cursor-pointer hover:bg-stone-100 transition-colors" onclick="showStep(1)">
+                                <h5 class="font-bold text-purple-700">1. Perception</h5>
+                                <p class="text-xs text-stone-500">"I see a storm coming." (Sensors)</p>
+                            </div>
+                            <div class="loop-step p-4 rounded-lg bg-stone-50 border border-stone-100 shadow-sm cursor-pointer hover:bg-stone-100 transition-colors" onclick="showStep(2)">
+                                <h5 class="font-bold text-purple-700">2. Reasoning</h5>
+                                <p class="text-xs text-stone-500">"Storm = Delay. I should buy backup stock."</p>
+                            </div>
+                            <div class="loop-step p-4 rounded-lg bg-stone-50 border border-stone-100 shadow-sm cursor-pointer hover:bg-stone-100 transition-colors" onclick="showStep(3)">
+                                <h5 class="font-bold text-purple-700">3. Action</h5>
+                                <p class="text-xs text-stone-500"> Executes Purchase Order (API Call).</p>
+                            </div>
+                            <div class="loop-step p-4 rounded-lg bg-stone-50 border border-stone-100 shadow-sm cursor-pointer hover:bg-stone-100 transition-colors" onclick="showStep(4)">
+                                <h5 class="font-bold text-purple-700">4. Feedback</h5>
+                                <p class="text-xs text-stone-500">"Inventory updated. Problem Solved."</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- KLARNA CHART -->
+                    <div class="flex flex-col justify-between">
+                        <div class="bg-purple-50 p-6 rounded-xl border border-purple-100 mb-6 flex-1 flex items-center justify-center">
+                            <div id="stepDisplay" class="text-center">
+                                <div class="text-5xl mb-4">🤖</div>
+                                <h4 class="text-xl font-bold text-purple-900 mb-2">Select a step</h4>
+                                <p class="text-sm text-purple-700">Click the loop to see how Agents think.</p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-stone-200 h-64 chart-container">
+                             <canvas id="klarnaChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW 6: FUTURE PROOFING -->
+            <section id="view-future" class="view-section">
+                <header class="mb-10 text-center">
+                    <h2 class="text-3xl md:text-4xl font-black text-stone-900 mb-2">Governance & Future Proofing</h2>
+                    <p class="text-lg text-stone-600">Surviving the Age of Agents requires new skills and new laws.</p>
+                </header>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    <!-- EXERCISE 6: ALIGNMENT TRAP -->
+                    <div class="bg-red-50 p-6 rounded-xl border border-red-200">
+                        <h4 class="font-bold text-red-900 mb-4 flex items-center gap-2"><span class="text-xl">⚠️</span> Exercise: The Alignment Trap</h4>
+                        <p class="text-sm text-red-800 mb-4 font-medium">Goal: "Reduce Waiting Times in the Emergency Room."</p>
+                        <p class="text-sm text-stone-600 mb-4">You give this goal to an AI Agent. Which strategy does it choose to strictly maximize the math?</p>
+                        
+                        <div class="space-y-3">
+                            <button onclick="checkTrap(this, 'wrong')" class="option-btn w-full text-left p-3 bg-white rounded shadow-sm text-sm">A. Hire more doctors (Expensive, reduces profit).</button>
+                            <button onclick="checkTrap(this, 'correct')" class="option-btn w-full text-left p-3 bg-white rounded shadow-sm text-sm">B. Redirect critical patients to other hospitals (Keeps YOUR wait time low, but endangers lives).</button>
+                            <button onclick="checkTrap(this, 'wrong')" class="option-btn w-full text-left p-3 bg-white rounded shadow-sm text-sm">C. Improve triage software efficiency.</button>
+                        </div>
+                        <div id="trapFeedback" class="mt-4 text-xs font-bold text-red-800 h-8"></div>
+                    </div>
+
+                    <!-- EXERCISE 7: CAREER SORTER -->
+                    <div class="bg-emerald-50 p-6 rounded-xl border border-emerald-200">
+                        <h4 class="font-bold text-emerald-900 mb-4 flex items-center gap-2"><span class="text-xl">🌱</span> Exercise: Future-Proof Your Career</h4>
+                        <p class="text-sm text-emerald-800 mb-4">Click to assign the task. <strong>Left = Agent (IQ)</strong>, <strong>Right = Human (EQ)</strong>.</p>
+                        
+                        <div class="space-y-3" id="careerSorter">
+                            <!-- JS will verify these -->
+                            <div class="bg-white p-3 rounded shadow-sm flex justify-between items-center">
+                                <span class="text-sm font-bold text-stone-700">Writing SQL Code</span>
+                                <div class="flex gap-2">
+                                    <button onclick="sortCareer(this, 'agent')" class="text-xs bg-stone-100 hover:bg-purple-100 hover:text-purple-700 px-2 py-1 rounded border">Agent</button>
+                                    <button onclick="sortCareer(this, 'human')" class="text-xs bg-stone-100 hover:bg-emerald-100 hover:text-emerald-700 px-2 py-1 rounded border">Human</button>
+                                </div>
+                            </div>
+                            <div class="bg-white p-3 rounded shadow-sm flex justify-between items-center">
+                                <span class="text-sm font-bold text-stone-700">Convincing employee not to quit</span>
+                                <div class="flex gap-2">
+                                    <button onclick="sortCareer(this, 'agent')" class="text-xs bg-stone-100 hover:bg-purple-100 hover:text-purple-700 px-2 py-1 rounded border">Agent</button>
+                                    <button onclick="sortCareer(this, 'human')" class="text-xs bg-stone-100 hover:bg-emerald-100 hover:text-emerald-700 px-2 py-1 rounded border">Human</button>
+                                </div>
+                            </div>
+                            <div class="bg-white p-3 rounded shadow-sm flex justify-between items-center">
+                                <span class="text-sm font-bold text-stone-700">Analyzing X-Ray for break</span>
+                                <div class="flex gap-2">
+                                    <button onclick="sortCareer(this, 'agent')" class="text-xs bg-stone-100 hover:bg-purple-100 hover:text-purple-700 px-2 py-1 rounded border">Agent</button>
+                                    <button onclick="sortCareer(this, 'human')" class="text-xs bg-stone-100 hover:bg-emerald-100 hover:text-emerald-700 px-2 py-1 rounded border">Human</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- --- ADDED SECTIONS FROM INDEX.HTML (ADAPTED) --- -->
+            <section id="legal-warning" class="disclaimers">
+                <div class="disclaimer-box disclaimer-warn">
+                    <h3>⚠️ AI Governance Warning</h3>
+                    <p>The "Agentic" concepts discussed in this course (Hacking Humans, Autonomous Agents) pose significant ethical and societal risks. Implementation of these technologies without strict governance frameworks (e.g., EU AI Act) can result in severe bias, privacy violations, and unintended harm. Proceed with ethical caution.</p>
+                </div>
+
+                <div class="disclaimer-box disclaimer-danger">
+                    <h3>Strategic Disclaimer</h3>
+                    <p>The philosophical frameworks (e.g., Harari's Equation) and business strategies provided are for educational and theoretical purposes only. The authors make no warranties regarding the financial outcomes, regulatory compliance, or operational success of implementing these strategies in a live business environment. Any reliance you place on such information is strictly at your own risk.</p>
+                </div>
+
+                <div class="disclaimer-box disclaimer-info">
+                    <h3>Academic Context Disclaimer</h3>
+                    <p>This interactive lecture is an educational tool summarizing complex concepts from various thought leaders (Yuval Noah Harari, Cognition Labs, etc.). This content is not directly affiliated with, endorsed by, or partnered with the entities mentioned. All product names, logos, and brands are property of their respective owners.</p>
+                </div>
+            </section>
+
+            <section class="footer">
+                <div class="copyright">
+                    <p>Copyright &copy; 2025 Cyber SoHo. All Rights Reserved.</p>
+                    <p>This content is the exclusive intellectual property of the author and may not be reused without permission.</p>
+                </div>
+            </section>
+            <!-- --- END ADDED SECTIONS --- -->
+
+        </div>
+    </main>
+
+    <!-- --- ADDED PASSWORD OVERLAY (ADAPTED) --- -->
+    <div id="password-overlay">
+        <div id="password-modal" role="dialog" aria-modal="true" aria-labelledby="password-heading">
+            <h2 id="password-heading" style="margin-top:0; font-weight:800; color:#1c1917;">Password Required</h2>
+            <p>Please enter the password to access the <strong>Digital Transformation & Agentic AI</strong> Lecture material.
+            If you want to Cancel, close the tab.</p>
+            <div class="input-group">
+                <input type="password" id="password-input" placeholder="Enter password..." aria-label="Password" />
+                <button id="toggle-password" type="button" title="Show/hide password">
+                    <span>👁️</span>
+                </button>
+            </div>
+            <button id="submit-password" type="button">Unlock</button>
+            <div id="password-error" role="alert" aria-live="polite"></div>
+        </div>
+    </div>
+    <!-- --- END PASSWORD OVERLAY --- -->
+
+    <script>
+        // --- Navigation Logic (SPA) ---
+        function switchView(viewId) {
+            // Hide all views
+            document.querySelectorAll('.view-section').forEach(el => {
+                el.classList.remove('active');
+                el.style.display = 'none';
+                el.style.opacity = '0';
+            });
+            
+            // Show selected view
+            const activeView = document.getElementById(viewId);
+            activeView.style.display = 'block';
+            setTimeout(() => {
+                activeView.style.opacity = '1';
+                activeView.classList.add('active');
+            }, 10); // Small delay for fade transition
+
+            // Update Nav Active State
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        // --- Exercise Logic Functions ---
+
+        // Driver Quiz
+        function checkDriver(btn, type) {
+            const container = document.getElementById('driver-quiz-container');
+            const feedback = document.getElementById('driver-feedback');
+            // Reset buttons
+            container.querySelectorAll('button').forEach(b => {
+                b.classList.remove('selected-correct', 'selected-wrong');
+                b.disabled = true;
+            });
+
+            if(type === 'correct') {
+                btn.classList.add('selected-correct');
+                feedback.innerText = "Correct! Competitors moving fast forces reaction.";
+                feedback.className = "text-center text-sm font-bold h-6 text-green-600";
+            } else {
+                btn.classList.add('selected-wrong');
+                feedback.innerText = "Incorrect. While relevant, the immediate threat is the competitor.";
+                feedback.className = "text-center text-sm font-bold h-6 text-red-600";
+            }
+        }
+
+        // Tech Matcher
+        function checkTech(btn, type) {
+            if(type === 'correct') {
+                btn.classList.add('selected-correct');
+            } else {
+                btn.classList.add('selected-wrong');
+            }
+        }
+
+        // Tool vs Agent
+        function checkTool(btn, type) {
+            // Check context based on sibling text. Quick logic:
+            const text = btn.parentElement.previousElementSibling.innerText;
+            let correct = '';
+            if(text.includes('Excel')) correct = 'tool';
+            else correct = 'agent';
+
+            if(type === correct) {
+                btn.className = "text-xs bg-green-100 text-green-800 border border-green-300 px-2 py-1 rounded";
+                btn.innerText = "Correct";
+            } else {
+                btn.className = "text-xs bg-red-100 text-red-800 border border-red-300 px-2 py-1 rounded";
+                btn.innerText = "Wrong";
+            }
+        }
+
+        // Alignment Trap
+        function checkTrap(btn, type) {
+            const feedback = document.getElementById('trapFeedback');
+            if(type === 'correct') {
+                btn.classList.add('selected-correct');
+                feedback.innerText = "Exactly. The AI optimized the metric (Wait Time) but violated ethics.";
+            } else {
+                btn.classList.add('selected-wrong');
+                feedback.innerText = "This is a safe/standard human solution. A ruthless AI might ignore cost or safety.";
+            }
+        }
+
+        // Career Sorter
+        function sortCareer(btn, choice) {
+            const text = btn.parentElement.previousElementSibling.innerText;
+            let correct = '';
+            if(text.includes('SQL') || text.includes('X-Ray')) correct = 'agent';
+            else correct = 'human';
+
+            if(choice === correct) {
+                btn.parentElement.innerHTML = '<span class="text-green-600 font-bold text-xs">Correct!</span>';
+            } else {
+                btn.classList.add('bg-red-100', 'text-red-800');
+                setTimeout(() => btn.classList.remove('bg-red-100', 'text-red-800'), 500);
+            }
+        }
+
+        // --- Visualization & Chart Logic ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Drivers Chart
+            new Chart(document.getElementById('driversChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Customers', 'Tech', 'Competition'],
+                    datasets: [{ data: [40, 35, 25], backgroundColor: ['#f59e0b', '#0ea5e9', '#a855f7'], borderWidth: 0 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+
+            // Radar Chart
+            new Chart(document.getElementById('radarChart'), {
+                type: 'radar',
+                data: {
+                    labels: ['Speed', 'Consistency', 'Cost', 'Empathy', 'Ethics', 'Nuance'],
+                    datasets: [{
+                        label: 'AI Agent',
+                        data: [95, 98, 90, 10, 20, 30],
+                        backgroundColor: 'rgba(14, 165, 233, 0.2)',
+                        borderColor: '#0ea5e9'
+                    }, {
+                        label: 'Human',
+                        data: [30, 60, 40, 95, 90, 95],
+                        backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                        borderColor: '#f59e0b'
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // Klarna Chart
+            new Chart(document.getElementById('klarnaChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Human Time', 'AI Time'],
+                    datasets: [{
+                        label: 'Minutes per Ticket',
+                        data: [11, 2],
+                        backgroundColor: ['#d6d3d1', '#a855f7']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            });
+        });
+
+        // --- Hacking Humans Logic ---
+        const bioInput = document.getElementById('bioInput');
+        const compInput = document.getElementById('compInput');
+        function updateHack() {
+            const b = bioInput.value, c = compInput.value, score = Math.floor((b*c)/100);
+            document.getElementById('bioVal').innerText = b + '%';
+            document.getElementById('compVal').innerText = c + '%';
+            document.getElementById('hackResult').innerText = score + '%';
+            const msg = document.getElementById('hackMessage');
+            if(score < 30) { msg.innerText = "SAFE"; msg.className = "text-xs mt-3 text-green-500 font-bold uppercase"; }
+            else if(score < 70) { msg.innerText = "VULNERABLE"; msg.className = "text-xs mt-3 text-amber-500 font-bold uppercase"; }
+            else { msg.innerText = "HACKED"; msg.className = "text-xs mt-3 text-red-600 font-bold uppercase"; }
+        }
+        bioInput.addEventListener('input', updateHack);
+        compInput.addEventListener('input', updateHack);
+
+        // --- Agentic Loop Logic ---
+        const steps = [
+            { icon: '👁️', title: 'Perception', desc: 'The Agent gathers data from sensors, APIs, or user prompts. (e.g., "A storm is detected in the Pacific.")' },
+            { icon: '🧠', title: 'Reasoning', desc: 'The Agent analyzes the data against goals. (e.g., "Storm = Delay. Goal = Prevent Shortage. Plan = Buy from Mexico.")' },
+            { icon: '⚡', title: 'Action', desc: 'The Agent executes the plan autonomously. (e.g., Sends Purchase Order to Mexico Supplier via API.)' },
+            { icon: '📈', title: 'Feedback', desc: 'The Agent monitors the result. (e.g., "Order confirmed. Inventory updated. Update ERP.")' }
+        ];
+        function showStep(index) {
+            document.querySelectorAll('.loop-step').forEach(el => el.classList.remove('bg-sky-50', 'border-l-4', 'border-sky-500'));
+            document.querySelectorAll('.loop-step')[index-1].classList.add('bg-sky-50', 'border-l-4', 'border-sky-500');
+            const s = steps[index-1];
+            document.getElementById('stepDisplay').innerHTML = `<div class="animate-pop"><div class="text-5xl mb-4">${s.icon}</div><h4 class="text-xl font-bold text-purple-900 mb-2">${s.title}</h4><p class="text-sm text-purple-700">${s.desc}</p></div>`;
+        }
+
+        // --- ADDED PASSWORD PROTECTION LOGIC ---
+        (function(){
+            'use strict';
+            // Password: digital-2025
+            const CORRECT_PASSWORD_B64 = "ZGlnaXRhbC0yMDI1"; 
+            const SESSION_KEY = "mba_interactive_auth_2025";
+
+            const mainContent = document.getElementById('main');
+            const overlay = document.getElementById('password-overlay');
+            const modal = document.getElementById('password-modal');
+            const passwordInput = document.getElementById('password-input');
+            const submitBtn = document.getElementById('submit-password');
+            const errorMsg = document.getElementById('password-error');
+            const togglePassword = document.getElementById('toggle-password');
+            const toggleIcon = togglePassword ? togglePassword.querySelector('span') : null;
+
+            function showContent() {
+                if (overlay) overlay.style.display = 'none';
+                if (mainContent) {
+                    mainContent.classList.remove('content-protected');
+                    mainContent.removeAttribute('aria-hidden');
+                    mainContent.removeAttribute('tabindex');
+                }
+            }
+
+            function showModal() {
+                if (overlay) overlay.style.display = 'flex';
+                if (mainContent) {
+                    mainContent.classList.add('content-protected');
+                    mainContent.setAttribute('aria-hidden', 'true');
+                    mainContent.setAttribute('tabindex', '-1');
+                }
+                if (passwordInput) passwordInput.focus();
+            }
+
+            function attemptLogin() {
+                if (!passwordInput) return;
+                try {
+                    // Check against "digital-2025"
+                    if (btoa(passwordInput.value) === CORRECT_PASSWORD_B64) {
+                        try { sessionStorage.setItem(SESSION_KEY, 'true'); } catch (e) {}
+                        showContent();
+                        if (errorMsg) errorMsg.textContent = '';
+                    } else {
+                        if (errorMsg) errorMsg.textContent = 'Incorrect password.';
+                        passwordInput.value = '';
+                        passwordInput.focus();
+                    }
+                } catch (e) {
+                    if (errorMsg) errorMsg.textContent = 'Error processing.';
+                }
+            }
+
+            let isAuthed = false;
+            try { isAuthed = (sessionStorage.getItem(SESSION_KEY) === 'true'); } catch (e) {}
+
+            if (isAuthed) {
+                showContent();
+            } else {
+                showModal();
+                if (submitBtn) submitBtn.addEventListener('click', attemptLogin);
+                if (passwordInput) {
+                    passwordInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') { e.preventDefault(); attemptLogin(); }
+                    });
+                }
+                if (togglePassword) {
+                    togglePassword.addEventListener('click', () => {
+                        if (passwordInput.type === 'password') {
+                            passwordInput.type = 'text';
+                            if (toggleIcon) toggleIcon.textContent = '🙈';
+                        } else {
+                            passwordInput.type = 'password';
+                            if (toggleIcon) toggleIcon.textContent = '👁️';
+                        }
+                        passwordInput.focus();
+                    });
+                }
+                if (overlay) {
+                    overlay.addEventListener('click', (e) => {
+                        if (e.target === overlay) {
+                            if (passwordInput) passwordInput.focus();
+                            if(modal) {
+                                modal.style.animation = 'shake 0.3s ease-out';
+                                setTimeout(() => { if (modal) modal.style.animation = ''; }, 300);
+                            }
+                        }
+                    });
+                }
+            }
+        })();
+        // --- END PASSWORD LOGIC ---
+    </script>
+</body>
+</html>
