@@ -785,7 +785,7 @@
         // --- ADDED PASSWORD PROTECTION LOGIC ---
         (function(){
             'use strict';
-            // Password: digital-2025
+            // Password: as provided
             const CORRECT_PASSWORD_B64 = "ZGlnaXRhbC0yMDI1"; 
             const SESSION_KEY = "mba_interactive_auth_2025";
 
@@ -820,7 +820,7 @@
             function attemptLogin() {
                 if (!passwordInput) return;
                 try {
-                    // Check against "digital-2025"
+                    // Check against the provided password
                     if (btoa(passwordInput.value) === CORRECT_PASSWORD_B64) {
                         try { sessionStorage.setItem(SESSION_KEY, 'true'); } catch (e) {}
                         showContent();
