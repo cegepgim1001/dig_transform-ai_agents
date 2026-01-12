@@ -1,5 +1,5 @@
 Digital Transformation & Agentic AI : Interactive MBA Lecture
-  A Single-Page Interactive Application (SPA) for MBA Students
+  SITE  --  A Single-Page Interactive Application (SPA) for MBA Students
 
 📖 Overview :
 This repository contains a single-file interactive web application designed to deliver an advanced MBA lecture on Digital Transformation and Agentic AI.
@@ -53,6 +53,7 @@ Educational Use : This tool is for educational purposes only. The "Hacking Human
 Copyright: © 2025 Cyber SoHo. All Rights Reserved.
 
 Created for the 2025-2026 Academic Term.
+
 
 
 
